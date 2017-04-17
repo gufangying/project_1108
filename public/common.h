@@ -46,14 +46,12 @@ typedef unsigned long long u64; /* 无符号64位整型 */
 /* 正常信息打印，产品正式运行时记录INFO级别系统日志，同时在串口输出 */
 #define prt(fmt, arg...) \
 	do { \
-        syslog(LOG_INFO, "[RK] %s(%d) " fmt, __func__, __LINE__, ##arg);\
         printf("[RK] %s(%d) " fmt, __func__, __LINE__, ##arg);\
 	}while(0)
 
 /* 错误信息打印，任何时候都记录ERROR级别系统日志，同时在串口输出 */
 #define err(fmt, arg...) \
 	do { \
-        syslog(LOG_ERR, "[err] %s(%d) Error, " fmt, __func__, __LINE__, ##arg);\
         printf("[err] %s(%d) Error, " fmt, __func__, __LINE__, ##arg);\
 	}while(0)
 
