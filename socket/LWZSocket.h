@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 #include <cstdio>
 #include <cstring>
 #include "../public/common.h"
@@ -40,6 +41,8 @@ public:
 	bool InitServer(int nPort = 6000, const char* pszIP = "127.0.0.1");
 	bool CreateServer();
 	bool Accept();
+	bool InitClient(int nPort = 6000, const char* pszIP = "127.0.0.1");
+	bool Connect();
 	bool Send();
 	bool Recv();
 

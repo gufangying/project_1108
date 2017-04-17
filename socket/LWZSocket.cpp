@@ -139,6 +139,53 @@ bool CLWZSocket::Accept()
 }
 
 /********************************************************************
+函 数 名 : InitClient
+函数功能 ：初始化客户端
+返 回 值 : bool
+参    数 : 无
+修改时间 : 1. 2017/4/17，卢磊，生成函数
+********************************************************************/
+bool CLWZSocket::InitClient(int nPort, const char* pszIP)
+{
+	if(Socket())
+	{
+		//远程服务器端口
+		m_nPortFar = nPort;
+
+		//远程服务器ip
+		sprintf(m_szIP, "%s", pszIP);
+	}
+}
+
+/********************************************************************
+函 数 名 : Connect
+函数功能 ：连接服务器
+返 回 值 : bool
+参    数 : 无
+修改时间 : 1. 2017/4/17，卢磊，生成函数
+********************************************************************/
+bool CLWZSocket::Connect()
+{
+	struct hostent *host;
+	struct sockaddr_in serv_addr;
+
+	host = gethostbyname(m_szIP);
+
+	serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(m_nPortFar);
+    serv_addr.sin_addr = *((struct in_addr *)host->h_addr);
+
+
+	if(connect(m_sockLocal,(struct sockaddr *)&serv_addr, sizeof(struct sockaddr))== -1)
+    {
+        err("Connect Failed \n");
+        return false;
+    }
+
+    prt("Successful \n");
+}
+
+/********************************************************************
 函 数 名 : Send
 函数功能 ：发送数据
 返 回 值 : bool

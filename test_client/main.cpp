@@ -5,15 +5,12 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-	cout<<"Test main"<<endl;
-
-	Test();
+	cout<<"Test_Client main"<<endl;
 
 	CLWZSocket obj;
 
-	obj.InitServer();
-	obj.CreateServer();
-	obj.Accept();
+	obj.InitClient();
+	obj.Connect();
 
 	prt("Quit \n");
 
