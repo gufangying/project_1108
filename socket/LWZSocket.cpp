@@ -60,7 +60,10 @@ bool CLWZSocket::Init()
 ********************************************************************/
 bool CLWZSocket::InitServer(int nPort, const char* pszIP)
 {
+	//端口
 	m_nPortLocal = nPort;
+
+	//ip
 	sprintf(m_szIP, "%s", pszIP);
 
 	return true;
@@ -75,9 +78,9 @@ bool CLWZSocket::InitServer(int nPort, const char* pszIP)
 ********************************************************************/
 bool CLWZSocket::CreateServer()
 {
-	if(Socket())
+	if(Socket(m_sockLocal))
 	{
-		if(SetSocket())
+		if(SetSocket(m_sockLocal))
 		{
 			if(Bind())
 			{
@@ -96,10 +99,11 @@ bool CLWZSocket::CreateServer()
 函 数 名 : Accept
 函数功能 ：等待连接
 返 回 值 : bool
-参    数 : 无
+参    数 : 	pUserFunc:用户处理函数
+
 修改时间 : 1. 2017/4/17，卢磊，生成函数
 ********************************************************************/
-bool CLWZSocket::Accept()
+bool CLWZSocket::Accept(USERFUNC pUserFunc)
 {
 	//客户端
 	int sockClient = 0;
@@ -125,6 +129,8 @@ bool CLWZSocket::Accept()
 		pthread_t AppThdID;
 		stUserData* pUserData = new stUserData();
 		pUserData->sockClient = sockClient;
+		pUserData->pUserFunc = pUserFunc;
+
 		if (pthread_create(&AppThdID, NULL, HandleFunc, (void *)pUserData))
 		{
 			err("Create Handle Thread Failed \n");
@@ -147,7 +153,7 @@ bool CLWZSocket::Accept()
 ********************************************************************/
 bool CLWZSocket::InitClient(int nPort, const char* pszIP)
 {
-	if(Socket())
+	if(Socket(m_sockFar))
 	{
 		//远程服务器端口
 		m_nPortFar = nPort;
@@ -176,7 +182,7 @@ bool CLWZSocket::Connect()
     serv_addr.sin_addr = *((struct in_addr *)host->h_addr);
 
 
-	if(connect(m_sockLocal,(struct sockaddr *)&serv_addr, sizeof(struct sockaddr))== -1)
+	if(connect(m_sockFar, (struct sockaddr *)&serv_addr, sizeof(struct sockaddr))== -1)
     {
         err("Connect Failed \n");
         return false;
@@ -186,14 +192,55 @@ bool CLWZSocket::Connect()
 }
 
 /********************************************************************
+函 数 名 : GetFarSocket
+函数功能 ：获取远端socket
+返 回 值 : int
+参    数 : 无
+修改时间 : 1. 2017/4/18，卢磊，生成函数
+********************************************************************/
+int CLWZSocket::GetFarSocket()
+{
+	return m_sockFar;
+}
+
+/********************************************************************
+函 数 名 : GetLocalSocket
+函数功能 ：获取近端socket
+返 回 值 : int
+参    数 : 无
+修改时间 : 1. 2017/4/18，卢磊，生成函数
+********************************************************************/
+int CLWZSocket::GetLocalSocket()
+{
+	return m_sockLocal;
+}
+
+/********************************************************************
 函 数 名 : Send
 函数功能 ：发送数据
 返 回 值 : bool
-参    数 : 无
+参    数 :	nSocket		:通信套接字
+			pSendData	:待发送的数据
+			nSize		:数据长度
 修改时间 : 1. 2017/4/17，卢磊，生成函数
 ********************************************************************/
-bool CLWZSocket::Send()
+bool CLWZSocket::Send(int nSocket, const char* const pSendData, const int nSize)
 {
+	int nTemp = 0;
+	int nHaveSend = 0;
+
+	while(nHaveSend < nSize)
+	{
+		nTemp = send(nSocket, pSendData + nHaveSend, nSize - nHaveSend, 0);
+
+		if(nTemp <= 0){
+			err("send Failed, size = %d \n", nTemp);
+			return false;
+		}
+
+		nHaveSend += nTemp;
+	}
+
 	return true;
 }
 
@@ -204,8 +251,23 @@ bool CLWZSocket::Send()
 参    数 : 无
 修改时间 : 1. 2017/4/17，卢磊，生成函数
 ********************************************************************/
-bool CLWZSocket::Recv()
+bool CLWZSocket::Recv(int nSocket, char* const pRecvData, const int nSize)
 {
+	int nTemp = 0;
+	int nHaveRecv = 0;
+
+	while(nHaveRecv < nSize)
+	{
+		nTemp = recv(nSocket, pRecvData + nHaveRecv, nSize - nHaveRecv, 0);
+
+		if(nTemp <= 0){
+			err("recv Failed, size = %d \n", nTemp);
+			return false;
+		}
+
+		nHaveRecv += nTemp;
+	}
+
 	return true;
 }
 
@@ -216,10 +278,10 @@ bool CLWZSocket::Recv()
 参    数 : 无
 修改时间 : 1. 2017/4/17，卢磊，生成函数
 ********************************************************************/
-bool CLWZSocket::Socket()
+bool CLWZSocket::Socket(int& nSocket)
 {
-	m_sockLocal = socket(AF_INET, SOCK_STREAM, 0);
-	if(m_sockLocal < 0)
+	nSocket = socket(AF_INET, SOCK_STREAM, 0);
+	if(nSocket < 0)
 	{
 		err("Socket Failed \n");
 		return false;
@@ -235,21 +297,21 @@ bool CLWZSocket::Socket()
 参    数 : 无
 修改时间 : 1. 2017/4/17，卢磊，生成函数
 ********************************************************************/
-bool CLWZSocket::SetSocket()
+bool CLWZSocket::SetSocket(int& nSocket)
 {
 	int flag = 1;
 	int option = 1;
 
 
 	//设置地址复用
-	if (setsockopt(m_sockLocal, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(int)) < 0)
+	if (setsockopt(nSocket, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(int)) < 0)
 	{
 		err("Faied \n");
 		return false;
 	}
 
 	//设置端口复用
-	if (setsockopt(m_sockLocal, SOL_SOCKET, SO_REUSEPORT, &option, sizeof(option)) < 0)
+	if (setsockopt(nSocket, SOL_SOCKET, SO_REUSEPORT, &option, sizeof(option)) < 0)
 	{
 		err("Faied \n");
 		return false;
@@ -325,7 +387,8 @@ void* CLWZSocket::HandleFunc(void* pData)
 	//参数
 	stUserData* pUserData = (stUserData*)pData;
 
-	//处理...
+	//调用用户处理函数, 传入参数pData
+	(pUserData->pUserFunc)(pData);
 
 	//最后记得释放pData
 	delete pUserData;
