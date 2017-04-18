@@ -64,7 +64,7 @@ private:
 	int m_sockFar;
 };
 
-//静态成员初始化
+//常静态成员初始化
 const int CLWZSocket::m_IP_Size;
 
 #endif
