@@ -1,10 +1,5 @@
 #include "LWZSocket.h"
 
-void Test()
-{
-	cout<<"Hello, World"<<endl;
-}
-
 /********************************************************************
 函 数 名 : CLWZSocket
 函数功能 ：构造函数
@@ -103,7 +98,7 @@ bool CLWZSocket::CreateServer()
 
 修改时间 : 1. 2017/4/17，卢磊，生成函数
 ********************************************************************/
-bool CLWZSocket::Accept(USERFUNC pUserFunc)
+bool CLWZSocket::Accept(HAND_FUNC pUserFunc)
 {
 	//客户端
 	int sockClient = 0;
@@ -127,9 +122,9 @@ bool CLWZSocket::Accept(USERFUNC pUserFunc)
 
 		//创建处理线程
 		pthread_t AppThdID;
-		stUserData* pUserData = new stUserData();
-		pUserData->sockClient = sockClient;
-		pUserData->pUserFunc = pUserFunc;
+		stFuncParam* pUserData = new stFuncParam();
+		pUserData->SetSocket(sockClient);
+		pUserData->SetUserFunc(pUserFunc);
 
 		if (pthread_create(&AppThdID, NULL, HandleFunc, (void *)pUserData))
 		{
@@ -385,16 +380,11 @@ void* CLWZSocket::HandleFunc(void* pData)
 	}
 
 	//参数
-	stUserData* pUserData = (stUserData*)pData;
+	stFuncParam* pFuncParam = (stFuncParam*)pData;
 
 	//调用用户处理函数, 传入参数pData
-	(pUserData->pUserFunc)(pData);
+	(pFuncParam->GetUserFunc())(pData);
 
 	//最后记得释放pData
-	delete pUserData;
-}
-
-void CLWZSocket::Show()
-{
-	cout<<"CLWZSocket::Show"<<endl;
+	delete pFuncParam;
 }

@@ -7,7 +7,7 @@ using namespace std;
 void* UserFunc(void* arg)
 {
 	//解析参数
-	CLWZSocket::stUserData* pUserData = (CLWZSocket::stUserData*)arg;
+	CLWZSocket::stFuncParam* pParam = (CLWZSocket::stFuncParam*)arg;
 
 	const int nSize = 16;
 	char szSend[nSize] = "12345678";
@@ -17,14 +17,14 @@ void* UserFunc(void* arg)
 	while(1)
 	{
 		//发数据
-		if(false == CLWZSocket::Send(pUserData->sockClient, szSend, nSize))
+		if(false == CLWZSocket::Send(pParam->GetSocket(), szSend, nSize))
 		{
 			err("Send Failed \n");
 			break;
 		}
 
 		//收数据
-		if(false == CLWZSocket::Recv(pUserData->sockClient, szRecv, nSize))
+		if(false == CLWZSocket::Recv(pParam->GetSocket(), szRecv, nSize))
 		{
 			err("Recv Failed \n");
 			break;
@@ -39,9 +39,7 @@ void* UserFunc(void* arg)
 
 int main(int argc, char* argv[])
 {
-	cout<<"Test main"<<endl;
-
-	Test();
+	cout<<"Test_Server main"<<endl;
 
 	//创建服务器的步骤(1,2,3)
 	CLWZSocket obj;

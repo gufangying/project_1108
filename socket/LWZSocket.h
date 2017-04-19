@@ -20,39 +20,45 @@
 
 using namespace std;
 
-void Test();
-
 class CLWZSocket
 {
 public:
 	//定义类中的局部类型
 	//1. 用户处理函数类型
-	typedef void* (*USERFUNC)(void*);
+	typedef void* (*HAND_FUNC)(void*);
 
 	//2. 线程处理函数参数类型
-	typedef class USERDATA{
+	typedef class FUNC_PARAM{
 	public:
-		USERDATA(){
+		FUNC_PARAM(){
 			sockClient = 0;
 			pUserData = NULL;
 			pUserFunc = NULL;
 		}
-	public:
+
+		int GetSocket(){return sockClient;}
+		void* GetUserData(){return pUserData;}
+		HAND_FUNC GetUserFunc(){return pUserFunc;}
+		void SetSocket(int nSocket){sockClient = nSocket;}
+		void SetUserData(void* pData){pUserData = pData;};
+		void SetUserFunc(HAND_FUNC pFunc){pUserFunc = pFunc;}
+	private:
 		int sockClient;
 
 		//用户数据
 		void* pUserData;
 
 		//用户处理函数
-		USERFUNC pUserFunc;
-	}stUserData;
+		HAND_FUNC pUserFunc;
+	}stFuncParam;
 
 	CLWZSocket();
 	~CLWZSocket();
-	bool Init();
+
+	//外部接口
 	bool InitServer(int nPort = 6000, const char* pszIP = "127.0.0.1");
 	bool CreateServer();
-	bool Accept(USERFUNC pUserFunc);
+	bool Accept(HAND_FUNC pUserFunc);
 	bool InitClient(int nPort = 6000, const char* pszIP = "127.0.0.1");
 	bool Connect();
 	int GetFarSocket();
@@ -61,9 +67,8 @@ public:
 	static bool Send(int nSocket, const char* const pSendData, const int nSize);
 	static bool Recv(int nSocket, char* const pRecvData, const int nSize);
 
-	void Show();
-
 private:
+	bool Init();
 	bool Socket(int& nSocket);
 	bool SetSocket(int& nSocket);
 	bool Bind();
